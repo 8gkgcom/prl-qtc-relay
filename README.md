@@ -4,9 +4,9 @@
 
 **当前版本：v2.2.0**
 
-[下载 v2.2.0 软件包（Windows + Linux）](./prl-relay-v2.2.0.zip)
+[下载 v2.2.0 软件包（Windows + Linux）](https://github.com/8gkgcom/prl-qtc-relay/releases/download/v2.2.0/prl-relay-v2.2.0.zip) · [查看 Release](https://github.com/8gkgcom/prl-qtc-relay/releases/tag/v2.2.0)
 
-打开下载链接后，点击 GitHub 文件页面的下载按钮。解压后选择对应系统的可执行文件即可使用，无需安装 Go、数据库或其他运行环境。
+点击下载链接，或在 Release 页的 **Assets** 中下载 `prl-relay-v2.2.0.zip`。解压后选择对应系统的可执行文件即可使用，无需安装 Go、数据库或其他运行环境。
 
 ## 功能
 
