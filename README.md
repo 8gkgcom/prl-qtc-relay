@@ -2,11 +2,11 @@
 
 适用于 **Pearl（PRL）** 和 **Quantus（QTC）** 的矿池转发软件。使用 Go 编写，提供 Windows x64、Linux x64 单文件程序，通过网页配置端口、矿池、地区节点和转发抽水，支持手机访问。
 
-**当前版本：v2.2.1**
+**当前版本：v2.3.0**
 
-[下载 v2.2.1 软件包（Windows + Linux）](https://github.com/8gkgcom/prl-qtc-relay/releases/download/v2.2.1/prl-relay-v2.2.1.zip) · [查看 Release](https://github.com/8gkgcom/prl-qtc-relay/releases/tag/v2.2.1)
+[下载 v2.3.0 软件包（Windows + Linux）](https://github.com/8gkgcom/prl-qtc-relay/releases/download/v2.3.0/prl-relay-v2.3.0.zip) · [查看 Release](https://github.com/8gkgcom/prl-qtc-relay/releases/tag/v2.3.0)
 
-点击下载链接，或在 Release 页的 **Assets** 中下载 `prl-relay-v2.2.1.zip`。解压后选择对应系统的可执行文件即可使用，无需安装 Go、数据库或其他运行环境。
+点击下载链接，或在 Release 页的 **Assets** 中下载 `prl-relay-v2.3.0.zip`。解压后选择对应系统的可执行文件即可使用，无需安装 Go、数据库或其他运行环境。
 
 ## 功能
 
@@ -16,6 +16,7 @@
 - **最近 24 小时统计**：连接趋势、接受 / 拒绝 / 未知份额、上传 / 下载和份额平均响应时间，支持按端口查看与 CSV 导出。
 - **端口查询页**：每个端口有独立查询地址，可设置访问密码；输入钱包后查看对应矿机、连接和最近 24 小时数据。终端查询页不展示抽水配置。
 - **在线矿工**：查询页显示全部在线连接的矿工名、就绪状态、接入时间和连接时长，同名多个连接分别列出；支持搜索与分页。
+- **在线升级**：在系统页面上传主程序，检查版本后自动替换并重启；保留配置和历史，启动失败自动回退。
 - **网页重启**：系统设置中确认后重启程序，保存统计，保留配置和历史，服务恢复后提示重新登录。
 - **日志与备份**：日志筛选、保存周期设置、设置导入导出、手动和定时数据备份、备份下载。
 - **连接防护**：连接数量和速率限制、密码尝试限制、会话隔离、CSRF 校验、报文大小和超时限制。
@@ -30,7 +31,7 @@
 3. 在浏览器打开 `http://服务器IP:9527`；本机可使用 `http://127.0.0.1:9527`。
 4. 使用初始密码 **`admin`** 登录，在“系统”中修改管理密码。
 
-保持程序运行窗口开启。配置、证书、日志和历史默认保存在程序旁的 `data` 目录。
+首次直接启动时保持程序运行窗口开启；网页重启或升级后进程在后台运行。配置、证书、日志和历史默认保存在程序旁的 `data` 目录。
 
 ### Linux
 
@@ -46,7 +47,8 @@ chmod +x prl-relay-linux-amd64
 需要长期运行和开机启动时，可安装软件包附带的 systemd 服务：
 
 ```bash
-sudo install -m 755 prl-relay-linux-amd64 /usr/local/bin/prl-relay
+sudo install -d -m 700 /var/lib/prl-relay
+sudo install -m 755 prl-relay-linux-amd64 /var/lib/prl-relay/prl-relay
 sudo install -m 644 prl-relay.service /etc/systemd/system/prl-relay.service
 sudo systemctl daemon-reload
 sudo systemctl enable --now prl-relay
@@ -146,7 +148,25 @@ http://服务器IP:9527/p/端口ID
 
 此按钮仅管理员可用。Linux 使用 exec 保留被服务管理器跟踪的 PID；Windows 启动新进程后退出旧进程。若 90 秒仍未恢复，页面会提示刷新或检查服务器日志。
 
-## 升级
+## 在线升级
+
+**v2.2.1 及更早版本首次需要手动替换为 v2.3.0。安装本版后，后续升级可以直接在网页完成。**
+
+1. 从本项目 Release 下载软件包并解压。
+2. 进入后台“系统” → “在线升级” → “上传主程序”。
+3. Windows 选择 `prl-relay-windows-amd64.exe`，Linux 选择 `prl-relay-linux-amd64`。上传单个主程序，不能上传 ZIP。
+4. 查看版本和 SHA-256，点击“安装并重启”。
+5. 等待页面提示完成，再使用原密码登录。矿工会短暂断线并自动重连。
+
+仅管理员可操作，支持最大 64 MiB 文件和 5 分钟上传时间。程序检查系统、架构、软件标记、文件摘要及配置兼容性；上传尚未确认时不执行文件。待安装文件 15 分钟过期。支持同版本重新安装，不支持没有升级协议的旧版主程序。
+
+安装前保存统计并备份当前程序与配置；新程序确认管理入口和转发端口启动后才判定成功，启动失败会自动恢复旧程序和配置。数据目录保留，已有配置、密码、证书、钱包记录和历史不被覆盖。系统设置显示最近一次结果；详细诊断保存在配置目录的 `updates/`。
+
+程序所在目录必须可写，并为上传文件、旧程序和更新助手预留空间。Linux 使用下方新版 systemd 安装路径；旧服务若仍运行 `/usr/local/bin/prl-relay`，需停止服务、将主程序放到 `/var/lib/prl-relay/prl-relay` 并更新附带服务文件，保留原数据目录。Windows 网页升级后的进程在后台运行，需停止时可在任务管理器结束相应程序。
+
+在线升级期间不要强制断电或结束更新助手。回退用于处理本次启动失败；无法恢复磁盘损坏、文件被外部删除或升级后长时间运行才出现的故障。手动恢复时先停止程序，再从程序目录的 `.relay-update-编号/` 中将 `previous.exe`（Linux 为 `previous`）和 `config.backup` 恢复到主程序及原配置路径。已完成的恢复文件至少保留 7 天，后续启动时清理；其中配置备份含认证信息和证书私钥。
+
+## 首次手动升级
 
 1. 正常停止旧程序。
 2. 备份并保留完整 `data` 目录；使用自定义配置路径或 systemd 时，保留对应数据目录。
@@ -166,14 +186,14 @@ http://服务器IP:9527/p/端口ID
 
 ## 验证范围
 
-v2.2.1 的 46 项 Go 测试和 Linux 竞态检测通过。Windows / Linux 成品均连续重启两次，密码、证书、端口设置和历史保留；手机端列表、搜索、翻页和网页重启已验证。
+v2.3.0 的 53 项 Go 测试、go vet 和 Linux 竞态检测通过。Windows / Linux 均验证了实际文件替换、连续升级、网页重启、故障回退与数据保留；Linux 另在真实 systemd 服务中验证了 DynamicUser、严格文件保护和主 PID 保留。手机上传和自动返回登录页已验证。
 
-SRBMiner 3.7.6 在 Windows 实挖：QTC JetSki SSL 重启前收到 3 个有效份额，自动重连后累计 4 个；PRL Kryptex SSL 收到 1 个有效份额。QTC 重启时有 1 个未确认份额记为“未知”，两币均无拒绝。Linux 本轮验证进程重启与数据保留，未进行 GPU 实挖。
+SRBMiner 3.7.6 在 Windows / RTX 5060 Ti 实测：QTC JetSki 双向 SSL 升级前接受 5 份，网页升级后自动重连，新连接再接受 1 份；PRL Kryptex 双向 SSL 接受 1 份。QTC 拒绝 0、未知 1；PRL 拒绝 1、未知 0。PRL 的 1 个拒绝为矿池返回 Stale share（过期任务结果）。新连接接受结果已单独核对矿工日志。Linux 本轮没有 GPU 实挖。
 
 内置目录为 2026-10-16 快照，包含 PRL 9 个、QTC 10 个矿池，共 152 个地区 / 难度选项。收录不表示每个节点都经过实挖验证；完整测试说明见软件包内 `TEST-REPORT.md`。
 
 软件包 SHA-256：
 
 ```text
-767ce11b9dd22d3e805861a112f21656f14928bb89a6c1abab293d77e6301e70
+3d735be1770ae97f0051d6684e5ccb402c4e74b0670d7a827436f78a754488b2
 ```
